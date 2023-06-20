@@ -4,14 +4,14 @@ import game.states.State;
 import game.states.TestState;
 import ui.CFrame;
 
-import javax.imageio.ImageIO;
+//import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+//import java.awt.image.BufferedImage;
+//import java.io.File;
+//import java.io.IOException;
 
 public class Launcher {
 
@@ -25,10 +25,10 @@ public class Launcher {
 
     static Graphics g;
 
-    static BufferedImage usImg;
+    //static BufferedImage usImg;
 
     public static void main(String[] args) {
-        initResources();
+        //initResources();
         width = 500;// usImg.getWidth();
         height = 500;// usImg.getHeight();
         State.currentState = new TestState(width, height);
@@ -37,13 +37,13 @@ public class Launcher {
         makeThread().start();
     }
 
-    private static void initResources() {
+    /*private static void initResources() {
         try {
             usImg = ImageIO.read(Launcher.class.getResource("/united-states-map-with-state-names.png"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
+    }*/
 
     private static void update() {
         if(State.currentState == null) return;
