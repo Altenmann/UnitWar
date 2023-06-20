@@ -1,11 +1,13 @@
 package game.units;
 
+import game.teams.Team;
+
 import java.awt.*;
 
 public class WalkerUnit extends Unit {
 
-    public WalkerUnit(int x, int y) {
-        super(x, y, 100, 10, 1, .5f);
+    public WalkerUnit(int x, int y, Team team) {
+        super(x, y, 1, .5f, team);
         displaySize = 20;
     }
 
@@ -19,11 +21,17 @@ public class WalkerUnit extends Unit {
         drawRotation(g);
         drawDesiredLocation(g);
 
-        g.setColor(Color.BLACK);
+        g.setColor(Color.red);
         g.fillOval((int)location.x-displaySize/2, (int)location.y-displaySize/2, displaySize, displaySize);
         if(selected) {
-            g.setColor(Color.BLUE);
+            g.setColor(Color.cyan);
             g.drawOval((int)location.x-displaySize/2, (int)location.y-displaySize/2, displaySize, displaySize);
         }
+    }
+
+    public void drawDesiredLocation(Graphics g) {
+        g.setColor(Color.white);
+        g.drawOval((int)desiredLocation.x-displaySize/2, (int)desiredLocation.y-displaySize/2,
+                displaySize, displaySize);
     }
 }

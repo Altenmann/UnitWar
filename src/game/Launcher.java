@@ -29,9 +29,9 @@ public class Launcher {
 
     public static void main(String[] args) {
         initResources();
-        width = usImg.getWidth();
-        height = usImg.getHeight();
-        State.currentState = new TestState(usImg, width, height);
+        width = 500;// usImg.getWidth();
+        height = 500;// usImg.getHeight();
+        State.currentState = new TestState(width, height);
         cframe = new CFrame(width, height);
         addControls();
         makeThread().start();

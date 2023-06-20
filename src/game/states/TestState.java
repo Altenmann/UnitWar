@@ -1,14 +1,11 @@
 package game.states;
 
-import game.units.Unit;
-import game.units.WalkerUnit;
+import game.teams.Team;
+import game.units.*;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
 
 public class TestState extends State {
 
@@ -16,29 +13,33 @@ public class TestState extends State {
     private Rectangle selectRect;
     private boolean dragging = false;
 
-    private Unit walkerUnit;
+    private Unit walkerUnit, tankUnit;
+
+    private ArrayList<Unit> units = new ArrayList<>();
+
 
     private int width, height;
 
-    private BufferedImage mapImg;
 
-
-    public TestState(BufferedImage mapImg, int width, int height) {
-        this.mapImg = mapImg;
+    public TestState(int width, int height) {
         this.width = width;
         this.height = height;
 
-
-
+        // The selecting rectangle points
         selectStart = new Point();
         selectEnd = new Point();
         selectRect = new Rectangle();
 
-        walkerUnit = new WalkerUnit(250, 250);
-    }
+        Team team1 = new Team(Color.blue, Color.cyan);
+        Team team2 = new Team(Color.green, Color.darkGray);
 
-    private void getSelection() {
-        walkerUnit.select(selectRect.contains(walkerUnit.getLocation()));
+        // Units to add
+        tankUnit = new TankUnit(350, 400, team1);
+        units.add(tankUnit);
+
+        for(int i=0; i<3; i++) {
+            units.add(new TankUnit(50, i*50+50, team2));
+        }
     }
 
     private void convertSelectedPoints() {
@@ -62,7 +63,7 @@ public class TestState extends State {
 
     @Override
     public void update() {
-        walkerUnit.update();
+        units.forEach(Unit::update);
     }
 
     /**
@@ -71,12 +72,9 @@ public class TestState extends State {
      */
     @Override
     public void draw(Graphics g) {
-        if(mapImg != null) g.drawImage(mapImg, 0, 0, width, height, null);
+        //((Graphics2D) g).setStroke(new BasicStroke(2));
 
-
-        ((Graphics2D) g).setStroke(new BasicStroke(3));
-
-        walkerUnit.draw(g);
+        units.forEach(unit -> unit.draw(g));
         drawSelection(g);
     }
 
@@ -86,13 +84,23 @@ public class TestState extends State {
         g.drawRect(selectRect.x, selectRect.y, selectRect.width, selectRect.height);
     }
 
+    private void getSelection() {
+        Unit.selectedUnits.clear();
+        units.forEach( unit -> {
+            if( selectRect.contains(unit.getLocation()) ) {
+                unit.select(true);
+                Unit.selectedUnits.add(unit);
+            } else {
+                unit.select(false);
+                //Unit.selectedUnits.remove(unit);
+            }
+        } );
+    }
+
     @Override
     public void mouseClicked(MouseEvent e) {
         //System.out.println("Clicked " + walkerUnit.isSelected());
-
-        if(walkerUnit.isSelected()) {
-            walkerUnit.orderMoveTo(e.getX(), e.getY());
-        }
+        Unit.orderMoveTo(e.getX(), e.getY());
     }
 
     @Override
