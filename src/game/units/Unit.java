@@ -6,32 +6,47 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
+/**
+ * The Unit class is an abstract class but of which stores
+ * the members of all shared aspects between units
+ *
+ * It also provides static methods for manipulating multiple selected units
+ */
 public abstract class Unit {
 
+    // Used for storing all the selected units
     public static ArrayList<Unit> selectedUnits = new ArrayList<>();
 
+
+    // A particular unit's location in the world
     protected Point2D.Double location;
+    // Where the unit is ordered to go
     protected Point2D.Double desiredLocation;
+    // The unit's desired attack location
     protected Point2D.Double attackLocation;
 
 
-    //protected ArrayList<Point> path = new ArrayList<>();
+    // Angles are in radians
+    protected double rotation = 0; // Angle unit is facing  (0 is right)
+    protected double moveAngle; // Angle on which to move
+    protected double finalRotation; // Rotation if not moving
 
-    // Used to determine which way they are facing
-    protected double rotation = 0;
-    protected double moveAngle;
-    protected double finalRotation;
 
-    protected int health, damage;
-    protected float speed, rotationSpeed;
+    protected int health = 100; // Health
+    protected int maxHealth = 100;
+    protected float speed; // Speed of movement
+    protected float rotationSpeed; // Speed of unit rotation
 
-    protected boolean selected = false;
+    protected boolean selected = false; // Selection by user
 
-    // Strictly for displaying purposes
-    protected int displaySize;
+    protected boolean isAlive = true;
 
-    protected Team team;
-    protected Color teamColor;
+
+    protected int displaySize; // The base size of which to display
+
+    protected Team team; // Each unit has a team
+
+    protected Rectangle hitBox;
 
     protected Unit(int x, int y, float speed, float rotationSpeed, Team team) {
         location = new Point2D.Double(x, y);
@@ -41,22 +56,37 @@ public abstract class Unit {
         this.rotationSpeed = (float)(rotationSpeed*Math.PI/8);
 
         this.team = team;
-        teamColor = team.getTeamColor();
-
-        damage = 0;
-        health = 1;
     }
 
     public abstract void update();
     public abstract void draw(Graphics g);
+
+    public abstract void showHealth(Graphics g);
 
     public abstract void drawDesiredLocation(Graphics g);
     public abstract void drawAttackLocation(Graphics g);
 
     public abstract void attack();
 
-    public void select(boolean selected) {
+    public abstract boolean inHitBox(Point p);
+
+    public void takeDamage(int damageAmount) {
+        if(!isAlive) return;
+        health -= damageAmount;
+        if(health <= 0) {
+            health = 0;
+            isAlive = false;
+            selected = false;
+        }
+    }
+
+    public boolean select(boolean selected) {
+        if(!isAlive) {
+            this.selected = false;
+            return false;
+        }
         this.selected = selected;
+        return true;
     }
 
     public Point2D.Double getLocation() {
@@ -91,8 +121,8 @@ public abstract class Unit {
             su = selectedUnits.get(i);
             double xSpace = i - halfSize + ((moveAmount%2!=0)?0:.5);
             //double ySpace = i - halfSize + ((moveAmount%2==0)?0:.5);
-            su.desiredLocation.x = (int) (x + ( su.displaySize*Math.cos(finalRotation + Math.PI/2) * xSpace ));//* (i-selectedUnits.size()/2) );
-            su.desiredLocation.y = (int) (y + ( su.displaySize*Math.sin(finalRotation + Math.PI/2) * xSpace ));//* (i-selectedUnits.size()/2) );
+            su.desiredLocation.x = (int) (x + ( su.displaySize*Math.cos(finalRotation + Math.PI/2) * xSpace ));
+            su.desiredLocation.y = (int) (y + ( su.displaySize*Math.sin(finalRotation + Math.PI/2) * xSpace ));
             su.setMoveAngle(su.desiredLocation);
             su.finalRotation = finalRotation;
         }
@@ -142,7 +172,7 @@ public abstract class Unit {
         }
     }
 
-    public boolean isSelected() {
-        return selected;
+    protected float healthPercent() {
+        return Math.min((float)health/maxHealth, 1);
     }
 }

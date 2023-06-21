@@ -6,6 +6,7 @@ public class TankShell extends Projectile {
 
     public TankShell(int x, int y, float angle) {
         super(x, y, angle, 20);
+        damage = 20;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package game.units.ammo;
 
 import game.states.TestState;
+import game.units.Unit;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -27,6 +28,8 @@ public abstract class Projectile {
     private float speed;
 
     protected int displaySize = 5;
+
+    protected int damage;
 
     protected Projectile(int x, int y, float angle, float speed) {
         location = new Point(x, y);
@@ -60,5 +63,18 @@ public abstract class Projectile {
                 p.location.x <= xMin - p.displaySize/2 || p.location.x >= xMax + p.displaySize/2
                 || p.location.y <= yMin - p.displaySize/2 || p.location.y > yMax + p.displaySize/2))
                 .collect(Collectors.toList());
+    }
+
+    public static void checkCollisions(ArrayList<Unit> units) {
+        Collection<Projectile> collidedProjectiles = new ArrayList<>();
+        projectiles.forEach(p -> {
+            units.forEach(unit -> {
+                if(unit.inHitBox(p.location)) {
+                    unit.takeDamage(p.damage);
+                    collidedProjectiles.add(p);
+                }
+            });
+        });
+        projectiles.removeAll(collidedProjectiles);
     }
 }

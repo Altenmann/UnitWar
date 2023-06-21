@@ -4,51 +4,40 @@ import game.states.State;
 import game.states.TestState;
 import ui.CFrame;
 
-//import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-//import java.awt.image.BufferedImage;
-//import java.io.File;
-//import java.io.IOException;
 
 public class Launcher {
 
+    // Has the canvas and jframe used for displaying the game
     static CFrame cframe;
 
+    // Width and height of the game
     static int width = 500, height = 500;
 
-    static boolean running = false;
-    static int fps = 30;
-    static int millisPerUpdate = 1000/fps;
+    static boolean running = false; // Main thread to loop if running
+    static int fps = 30; // Frames per second
+    static int millisPerUpdate = 1000/fps; // Milliseconds between updates
 
     static Graphics g;
 
-    //static BufferedImage usImg;
-
     public static void main(String[] args) {
-        //initResources();
-        width = 500;// usImg.getWidth();
-        height = 500;// usImg.getHeight();
         State.currentState = new TestState(width, height);
         cframe = new CFrame(width, height);
         addControls();
         makeThread().start();
     }
 
-    /*private static void initResources() {
-        try {
-            usImg = ImageIO.read(Launcher.class.getResource("/united-states-map-with-state-names.png"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }*/
-
     private static void update() {
         if(State.currentState == null) return;
 
+        // Updating the state
         State.currentState.update();
+
+
+        // Drawing the state
 
         // Getting the graphics from cframe
         g = cframe.getDrawGraphics();
@@ -59,9 +48,11 @@ public class Launcher {
         // Current state drawing
         State.currentState.draw(g);
 
+        // Show what was drawn
         cframe.finalizeDraw(g);
     }
 
+    // Main thread to loop while running is true
     private static Thread makeThread() {
         return new Thread (() -> {
             running = true;
@@ -83,6 +74,7 @@ public class Launcher {
         });
     }
 
+    // Controls for the canvas directed to the current state
     private static void addControls() {
         cframe.addMouseListener(new MouseListener() {
             @Override

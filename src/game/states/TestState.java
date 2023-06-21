@@ -10,44 +10,44 @@ import java.util.ArrayList;
 
 public class TestState extends State {
 
-    private Point selectStart, selectEnd;
-    private Rectangle selectRect;
+    // Point and Rectangle used for selecting units
+    private final Point selectStart = new Point();
+    private final Point selectEnd = new Point();
+    private final Rectangle selectRect = new Rectangle();
+
+    // Whether the user is dragging or not
     private boolean dragging = false;
 
-    private Unit tankUnit;
+    // An all-purpose unit array list to perform actions on all of them
+    private final ArrayList<Unit> units = new ArrayList<>();
 
-    private ArrayList<Unit> units = new ArrayList<>();
 
-
-    private int width, height;
+    private final int width;
+    private final int height;
 
 
     public TestState(int width, int height) {
         this.width = width;
         this.height = height;
 
-        // The selecting rectangle points
-        selectStart = new Point();
-        selectEnd = new Point();
-        selectRect = new Rectangle();
-
-
         // Initialize the projectile bounds
         Projectile.setBounds(0, width, 0, height);
 
-
+        // Two different teams and their colors
         Team team1 = new Team(Color.blue, Color.cyan);
         Team team2 = new Team(Color.green, Color.darkGray);
 
         // Units to add
-        tankUnit = new TankUnit(350, 400, team1);
+        TankUnit tankUnit = new TankUnit(350, 400, team1);
         units.add(tankUnit);
 
+        // Adding units for team 2
         for(int i=0; i<3; i++) {
             units.add(new TankUnit(50, i*50+50, team2));
         }
     }
 
+    // Gets the selected start and end points and turns them into a rectangle
     private void convertSelectedPoints() {
         int x = selectStart.x;
         int y = selectStart.y;
@@ -69,40 +69,50 @@ public class TestState extends State {
 
     @Override
     public void update() {
+        // Update each unit
         units.forEach(Unit::update);
+        // Update every projectile
         Projectile.updateAll();
+        Projectile.checkCollisions(units);
     }
 
-    /**
-     * {@code @method} draw
-     * @param g Graphics
-     */
+
     @Override
     public void draw(Graphics g) {
-        //((Graphics2D) g).setStroke(new BasicStroke(2));
-
+        // Draw all projectiles
         Projectile.drawAll(g);
+        // Call the draw method for each unit
         units.forEach(unit -> unit.draw(g));
+        // Draw the selection rectangle
         drawSelection(g);
     }
 
+    // Draws the rectangle of the user's selection
     private void drawSelection(Graphics g) {
         if(selectRect.width == 0 && selectRect.height == 0) return;
         g.setColor(Color.white);
         g.drawRect(selectRect.x, selectRect.y, selectRect.width, selectRect.height);
     }
 
-    private void getSelection() {
+
+    // Selects and adds the unit to the Unit array list to be controlled by user
+    private void getUnitsInSelection() {
         Unit.selectedUnits.clear();
         units.forEach( unit -> {
             if( selectRect.contains(unit.getLocation()) ) {
-                unit.select(true);
-                Unit.selectedUnits.add(unit);
+                if(unit.select(true)) Unit.selectedUnits.add(unit);
             } else {
                 unit.select(false);
             }
         } );
     }
+
+
+
+    /*
+     * Control Methods for user input
+     * TODO: Add keyboard events and controls for them
+     */
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -125,7 +135,7 @@ public class TestState extends State {
     public void mouseReleased(MouseEvent e) {
         if(dragging) {
             convertSelectedPoints();
-            getSelection();
+            getUnitsInSelection();
             selectRect.width = 0;
             selectRect.height = 0;
         }

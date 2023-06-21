@@ -5,37 +5,118 @@ import game.units.ammo.Projectile;
 import game.units.ammo.TankShell;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 
 public class TankUnit extends Unit {
 
-    private float gunRotation = 0, gunRotationSpeed = .4f;
+    private float gunRotation = 0, gunRotationSpeed = (float)(.08 * Math.PI/8);
 
     private long lastFireTime=0;
     private float gunCooldown=2;
 
     public TankUnit(int x, int y, Team team) {
-        super(x, y, 3, .3f, team);
+        super(x, y, 2, .1f, team);
         displaySize = 30;
+
+        hitBox = new Rectangle(x-displaySize/2, y-displaySize/4, displaySize, displaySize/2);
     }
 
     @Override
     public void update() {
+        if(!isAlive) return;
         moveToDesiredLocation();
+        updateHitBox();
+
         attack();
     }
 
     @Override
+    public boolean inHitBox(Point point) {
+        double distToCenter = Point.distance(point.x, point.y, location.x, location.y);
+        double angleToCenter = Math.atan2(point.y-location.y, point.x-location.x);
+        if(angleToCenter < 0) angleToCenter += Math.PI * 2;
+        return hitBox.contains(new Point2D.Double(
+                location.x + Math.cos(angleToCenter-rotation) * distToCenter,
+                location.y + Math.sin(angleToCenter-rotation) * distToCenter));
+    }
+
+    private void updateHitBox() {
+        hitBox.x = (int) location.x - hitBox.width/2;
+        hitBox.y = (int) location.y - hitBox.height/2;
+    }
+
+    @Override
     public void draw(Graphics g) {
-        drawDesiredLocation(g);
-        drawBody(g, (int) location.x, (int) location.y, rotation, true);
+        if(isAlive) drawDesiredLocation(g);
+        drawBody(g, hitBox.x, hitBox.y, rotation, true);
         drawGun(g, (int) location.x, (int) location.y);
 
-        drawAttackLocation(g);
+        if(isAlive) drawAttackLocation(g);
+    }
+
+    private void drawBody(Graphics g, int x, int y, double rotation, boolean fill) {
+
+        // Rotate to show the tanks rotation
+        ((Graphics2D) g).rotate(rotation, x+hitBox.width/2, y+hitBox.height/2);
+
+        // Fill the body in
+        if(fill) {
+            g.setColor(team.getTeamColor());
+            g.fillRect(x, y, hitBox.width, hitBox.height);
+        }
+
+        // Show selection
+        g.setColor((selected&&fill)?Color.red:team.getSecondaryColor());
+        g.drawRect(x, y, hitBox.width, hitBox.height);
+
+        // Health bar
+        if(fill) {
+            showHealth(g);
+        }
+
+        // Rotate the graphics back
+        ((Graphics2D) g).rotate(-rotation, x+hitBox.width/2, y+hitBox.height/2);
+    }
+
+    private void drawGun(Graphics g, int x, int y) {
+        ((Graphics2D) g).rotate(rotation+gunRotation, x, y);
+
+        Rectangle gunRect = new Rectangle(x, y-displaySize/16, displaySize, displaySize/8);
+        Rectangle mountRect = new Rectangle(x-displaySize/4, y-displaySize/4, displaySize/2, displaySize/2);
+
+        // Gun fill
+        g.setColor(team.getTeamColor());
+        g.fillRect(gunRect.x, gunRect.y, gunRect.width, gunRect.height);
+        // Gun outline
+        g.setColor(team.getSecondaryColor());
+        g.drawRect(gunRect.x, gunRect.y, gunRect.width, gunRect.height);
+
+        // Gun mount outline
+        g.setColor(team.getTeamColor());
+        g.fillOval(mountRect.x, mountRect.y, mountRect.width, mountRect.height);
+        // Gun mount fill
+        g.setColor(team.getSecondaryColor());
+        g.drawOval(mountRect.x, mountRect.y, mountRect.width, mountRect.height);
+
+        // Rotate the graphics back
+        ((Graphics2D) g).rotate(-(rotation+gunRotation), x, y);
+    }
+
+    @Override
+    public void showHealth(Graphics g) {
+        Rectangle healthRect = new Rectangle((int)location.x-displaySize/2, (int)location.y-displaySize/4,
+                displaySize/6, displaySize/2);
+        g.setColor(Color.white);
+        g.fillRect(healthRect.x, healthRect.y, healthRect.width, healthRect.height);
+        g.setColor(Color.red);
+        g.fillRect(healthRect.x, healthRect.y, healthRect.width, (int)(healthPercent() * healthRect.height));
+        g.setColor(team.getSecondaryColor());
+        g.drawRect(healthRect.x, healthRect.y, healthRect.width, healthRect.height);
     }
 
     @Override
     public void drawDesiredLocation(Graphics g) {
-        drawBody(g, (int)desiredLocation.x, (int)desiredLocation.y, finalRotation, false);
+        drawBody(g, (int)desiredLocation.x-hitBox.width/2, (int)desiredLocation.y- hitBox.height/2, finalRotation, false);
     }
 
     @Override
@@ -67,12 +148,13 @@ public class TankUnit extends Unit {
 
         float totalRotation = (float) ( rotation + gunRotation );
 
-
-
+        // Clamp angle values to 0 and 2*PI
+        if(gunRotation >= Math.PI*2) gunRotation %= Math.PI*2;
+        else if(gunRotation < 0) gunRotation += Math.PI*2;
         if(totalRotation >= Math.PI*2) totalRotation %= Math.PI*2;
-        if(totalRotation < 0) totalRotation += Math.PI*2;
+        else if(totalRotation < 0) totalRotation += Math.PI*2;
         if(targetAngle >= Math.PI*2) targetAngle %= Math.PI*2;
-        if(targetAngle < 0) targetAngle += Math.PI*2;
+        else if(targetAngle < 0) targetAngle += Math.PI*2;
 
         if(totalRotation == targetAngle) return true;
 
@@ -93,48 +175,5 @@ public class TankUnit extends Unit {
 
 
         return false;
-    }
-
-    private void drawBody(Graphics g, int x, int y, double rotation, boolean fill) {
-
-        // Rotate to show the tanks rotation
-        ((Graphics2D) g).rotate(rotation, x, y);
-
-        // Fill the body in
-        if(fill) {
-            g.setColor(teamColor);
-            g.fillRect(x - displaySize / 2, y - displaySize / 4, displaySize, displaySize / 2);
-        }
-
-        // Show selection
-        g.setColor((selected&&fill)?Color.red:team.getSecondaryColor());
-        g.drawRect(x-displaySize/2, y-displaySize/4, displaySize, displaySize/2);
-
-        // Rotate the graphics back
-        ((Graphics2D) g).rotate(-rotation, x, y);
-    }
-
-    private void drawGun(Graphics g, int x, int y) {
-        ((Graphics2D) g).rotate(rotation+gunRotation, x, y);
-
-        Rectangle gunRect = new Rectangle(x, y-displaySize/16, displaySize, displaySize/8);
-        Rectangle mountRect = new Rectangle(x-displaySize/4, y-displaySize/4, displaySize/2, displaySize/2);
-
-        // Gun fill
-        g.setColor(teamColor);
-        g.fillRect(gunRect.x, gunRect.y, gunRect.width, gunRect.height);
-        // Gun outline
-        g.setColor(team.getSecondaryColor());
-        g.drawRect(gunRect.x, gunRect.y, gunRect.width, gunRect.height);
-
-        // Gun mount outline
-        g.setColor(teamColor);
-        g.fillOval(mountRect.x, mountRect.y, mountRect.width, mountRect.height);
-        // Gun mount fill
-        g.setColor(team.getSecondaryColor());
-        g.drawOval(mountRect.x, mountRect.y, mountRect.width, mountRect.height);
-
-        // Rotate the graphics back
-        ((Graphics2D) g).rotate(-(rotation+gunRotation), x, y);
     }
 }
