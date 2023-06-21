@@ -27,9 +27,19 @@ public abstract class Unit {
 
 
     // Angles are in radians
-    protected double rotation = 0; // Angle unit is facing  (0 is right)
+    protected double rotation; // Angle unit is facing  (0 is right)
     protected double moveAngle; // Angle on which to move
     protected double finalRotation; // Rotation if not moving
+
+
+    /**
+     * For Weapons
+     */
+    protected double gunRotation = 0;
+    protected double gunRotationSpeed = Math.PI;
+
+    protected double gunCooldown = 1;
+    protected long lastFireTime=0;
 
 
     protected int health = 100; // Health
@@ -41,6 +51,8 @@ public abstract class Unit {
 
     protected boolean isAlive = true;
 
+    protected boolean isMoving = false;
+
 
     protected int displaySize; // The base size of which to display
 
@@ -48,9 +60,12 @@ public abstract class Unit {
 
     protected Rectangle hitBox;
 
-    protected Unit(int x, int y, float speed, float rotationSpeed, Team team) {
+    protected Unit(int x, int y, double rotation, float speed, float rotationSpeed, Team team) {
         location = new Point2D.Double(x, y);
         desiredLocation = new Point2D.Double(x, y);
+
+        this.rotation = rotation;
+        finalRotation = rotation;
 
         this.speed = speed;
         this.rotationSpeed = (float)(rotationSpeed*Math.PI/8);
@@ -68,7 +83,7 @@ public abstract class Unit {
 
     public abstract void attack();
 
-    public abstract boolean inHitBox(Point p);
+    protected abstract void updateHitBox();
 
     public void takeDamage(int damageAmount) {
         if(!isAlive) return;
@@ -170,6 +185,23 @@ public abstract class Unit {
             if(ySign * (location.y + yMove) > ySign * desiredLocation.y) location.y = desiredLocation.y;
             else location.y += yMove;
         }
+    }
+
+    public boolean inHitBox(Point2D.Double point1, Point2D.Double point2) {
+        double dist1 = Point.distance(point1.x, point1.y, location.x, location.y);
+        double angle1 = Math.atan2(point1.y-location.y, point1.x-location.x);
+        double dist2 = Point.distance(point2.x, point2.y, location.x, location.y);
+        double angle2 = Math.atan2(point2.y-location.y, point2.x-location.x);
+
+        if(angle1 < 0) angle1+= Math.PI * 2;
+        if(angle2 < 0) angle2 += Math.PI*2;
+
+        double x1 = location.x + Math.cos(angle1) * dist1;
+        double y1 = location.y + Math.sin(angle1) * dist1;
+        double x2 = location.x + Math.cos(angle2) * dist2;
+        double y2 = location.y + Math.sin(angle2) * dist2;
+
+        return hitBox.intersectsLine(x1, y1, x2, y2);
     }
 
     protected float healthPercent() {

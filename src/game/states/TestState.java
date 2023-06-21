@@ -37,13 +37,13 @@ public class TestState extends State {
         Team team1 = new Team(Color.blue, Color.cyan);
         Team team2 = new Team(Color.green, Color.darkGray);
 
-        // Units to add
-        TankUnit tankUnit = new TankUnit(350, 400, team1);
-        units.add(tankUnit);
-
         // Adding units for team 2
         for(int i=0; i<3; i++) {
-            units.add(new TankUnit(50, i*50+50, team2));
+            units.add(new TankUnit(50, i*50+50, 0, team1));
+            units.add(new TankUnit(width-50, height-(i*50+50), Math.PI, team2));
+
+            units.add(new InfantryUnit(200, i*50+50, 0, team1));
+            units.add(new InfantryUnit(200, height-(i*50+50), Math.PI, team2));
         }
     }
 

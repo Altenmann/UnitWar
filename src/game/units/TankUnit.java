@@ -5,20 +5,16 @@ import game.units.ammo.Projectile;
 import game.units.ammo.TankShell;
 
 import java.awt.*;
-import java.awt.geom.Point2D;
 
 public class TankUnit extends Unit {
 
-    private float gunRotation = 0, gunRotationSpeed = (float)(.08 * Math.PI/8);
-
-    private long lastFireTime=0;
-    private float gunCooldown=2;
-
-    public TankUnit(int x, int y, Team team) {
-        super(x, y, 2, .1f, team);
+    public TankUnit(int x, int y, double rotation, Team team) {
+        super(x, y, rotation, 2, .1f, team);
         displaySize = 30;
 
         hitBox = new Rectangle(x-displaySize/2, y-displaySize/4, displaySize, displaySize/2);
+
+        gunRotationSpeed *= .01;
     }
 
     @Override
@@ -31,16 +27,7 @@ public class TankUnit extends Unit {
     }
 
     @Override
-    public boolean inHitBox(Point point) {
-        double distToCenter = Point.distance(point.x, point.y, location.x, location.y);
-        double angleToCenter = Math.atan2(point.y-location.y, point.x-location.x);
-        if(angleToCenter < 0) angleToCenter += Math.PI * 2;
-        return hitBox.contains(new Point2D.Double(
-                location.x + Math.cos(angleToCenter-rotation) * distToCenter,
-                location.y + Math.sin(angleToCenter-rotation) * distToCenter));
-    }
-
-    private void updateHitBox() {
+    protected void updateHitBox() {
         hitBox.x = (int) location.x - hitBox.width/2;
         hitBox.y = (int) location.y - hitBox.height/2;
     }
@@ -61,7 +48,7 @@ public class TankUnit extends Unit {
 
         // Fill the body in
         if(fill) {
-            g.setColor(team.getTeamColor());
+            g.setColor((isAlive)?team.getTeamColor():Color.gray);
             g.fillRect(x, y, hitBox.width, hitBox.height);
         }
 
@@ -85,14 +72,14 @@ public class TankUnit extends Unit {
         Rectangle mountRect = new Rectangle(x-displaySize/4, y-displaySize/4, displaySize/2, displaySize/2);
 
         // Gun fill
-        g.setColor(team.getTeamColor());
+        g.setColor((isAlive)?team.getTeamColor():Color.gray);
         g.fillRect(gunRect.x, gunRect.y, gunRect.width, gunRect.height);
         // Gun outline
         g.setColor(team.getSecondaryColor());
         g.drawRect(gunRect.x, gunRect.y, gunRect.width, gunRect.height);
 
         // Gun mount outline
-        g.setColor(team.getTeamColor());
+        g.setColor((isAlive)?team.getTeamColor():Color.gray);
         g.fillOval(mountRect.x, mountRect.y, mountRect.width, mountRect.height);
         // Gun mount fill
         g.setColor(team.getSecondaryColor());
@@ -140,13 +127,13 @@ public class TankUnit extends Unit {
     private void fire() {
         if(System.currentTimeMillis()-lastFireTime < gunCooldown*1000) return;
         lastFireTime = System.currentTimeMillis();
-        Projectile.addProjectile(new TankShell((int)location.x, (int)location.y, (float)(rotation+gunRotation)));
+        Projectile.addProjectile(new TankShell((int)location.x, (int)location.y, (float)(rotation+gunRotation), this));
     }
 
     public boolean rotateGun(double x, double y) {
-        float targetAngle = (float) Math.atan2(y-location.y, x-location.x);
+        double targetAngle = Math.atan2(y-location.y, x-location.x);
 
-        float totalRotation = (float) ( rotation + gunRotation );
+        double totalRotation = ( rotation + gunRotation );
 
         // Clamp angle values to 0 and 2*PI
         if(gunRotation >= Math.PI*2) gunRotation %= Math.PI*2;
@@ -159,9 +146,9 @@ public class TankUnit extends Unit {
         if(totalRotation == targetAngle) return true;
 
 
-        float rotationDistance = targetAngle - totalRotation;
+        double rotationDistance = targetAngle - totalRotation;
 
-        float rotateAmount =
+        double rotateAmount =
                 gunRotationSpeed
                         * ((rotationDistance>0)? 1:-1)
                         * ((Math.abs(rotationDistance) <= Math.PI)? 1: -1);

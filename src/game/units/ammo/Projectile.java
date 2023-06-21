@@ -1,13 +1,12 @@
 package game.units.ammo;
 
-import game.states.TestState;
 import game.units.Unit;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public abstract class Projectile {
 
@@ -22,22 +21,30 @@ public abstract class Projectile {
         Projectile.yMax = yMax;
     }
 
-    protected Point location;
-    protected float angle;
+    protected Point2D.Double location;
+    protected Point2D.Double lastLocation;
+    protected double angle;
 
-    private float speed;
+    private double speed;
 
     protected int displaySize = 5;
 
     protected int damage;
 
-    protected Projectile(int x, int y, float angle, float speed) {
-        location = new Point(x, y);
+    protected Unit shooter;
+
+    protected Projectile(int x, int y, float angle, float speed, Unit shooter) {
+        location = new Point2D.Double(x, y);
+        lastLocation = new Point2D.Double(x, y);
         this.angle = angle;
         this.speed = speed;
+
+        this.shooter = shooter;
     }
 
     public void update() {
+        lastLocation.x = location.x;
+        lastLocation.y = location.y;
         location.x += speed*Math.cos(angle);
         location.y += speed*Math.sin(angle);
     }
@@ -69,7 +76,8 @@ public abstract class Projectile {
         Collection<Projectile> collidedProjectiles = new ArrayList<>();
         projectiles.forEach(p -> {
             units.forEach(unit -> {
-                if(unit.inHitBox(p.location)) {
+                if(p.shooter == unit) return;
+                if(unit.inHitBox(p.location, p.lastLocation)) {
                     unit.takeDamage(p.damage);
                     collidedProjectiles.add(p);
                 }
