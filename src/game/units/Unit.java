@@ -89,10 +89,15 @@ public abstract class Unit {
         if(!isAlive) return;
         health -= damageAmount;
         if(health <= 0) {
-            health = 0;
-            isAlive = false;
-            selected = false;
+            die();
         }
+    }
+
+    private void die() {
+        health = 0;
+        isAlive = false;
+        selected = false;
+        selectedUnits.remove(this);
     }
 
     public boolean select(boolean selected) {
@@ -113,6 +118,10 @@ public abstract class Unit {
         selectedUnits.forEach(unit -> unit.attackLocation = new Point2D.Double(x, y));
     }
 
+    /**
+     *
+     * TODO: Fix to support infantry and tank spacing and further expansions
+     */
     public static void orderMoveTo(int x, int y) {
         Unit su;
         Point2D.Double avgPoint = new Point2D.Double();
