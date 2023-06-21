@@ -18,7 +18,6 @@ public class WalkerUnit extends Unit {
 
     @Override
     public void draw(Graphics g) {
-        drawRotation(g);
         drawDesiredLocation(g);
 
         g.setColor(Color.red);
@@ -33,5 +32,15 @@ public class WalkerUnit extends Unit {
         g.setColor(Color.white);
         g.drawOval((int)desiredLocation.x-displaySize/2, (int)desiredLocation.y-displaySize/2,
                 displaySize, displaySize);
+    }
+
+    @Override
+    public void drawAttackLocation(Graphics g) {
+
+    }
+
+    @Override
+    public void attack() {
+
     }
 }

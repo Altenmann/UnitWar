@@ -12,6 +12,7 @@ public abstract class Unit {
 
     protected Point2D.Double location;
     protected Point2D.Double desiredLocation;
+    protected Point2D.Double attackLocation;
 
 
     //protected ArrayList<Point> path = new ArrayList<>();
@@ -49,13 +50,10 @@ public abstract class Unit {
     public abstract void update();
     public abstract void draw(Graphics g);
 
-    public void drawRotation(Graphics g) {
-        g.setColor(Color.yellow);
-        g.drawLine((int)location.x, (int)location.y,
-                (int)(location.x+30*Math.cos(rotation)), (int)(location.y+30*Math.sin(rotation)));
-    }
-
     public abstract void drawDesiredLocation(Graphics g);
+    public abstract void drawAttackLocation(Graphics g);
+
+    public abstract void attack();
 
     public void select(boolean selected) {
         this.selected = selected;
@@ -63,6 +61,11 @@ public abstract class Unit {
 
     public Point2D.Double getLocation() {
         return location;
+    }
+
+
+    public static void orderAttack(int x, int y) {
+        selectedUnits.forEach(unit -> unit.attackLocation = new Point2D.Double(x, y));
     }
 
     public static void orderMoveTo(int x, int y) {
@@ -88,8 +91,8 @@ public abstract class Unit {
             su = selectedUnits.get(i);
             double xSpace = i - halfSize + ((moveAmount%2!=0)?0:.5);
             //double ySpace = i - halfSize + ((moveAmount%2==0)?0:.5);
-            su.desiredLocation.x = x + ( su.displaySize*Math.cos(finalRotation + Math.PI/2) * xSpace );//* (i-selectedUnits.size()/2) );
-            su.desiredLocation.y = y + ( su.displaySize*Math.sin(finalRotation + Math.PI/2) * xSpace );//* (i-selectedUnits.size()/2) );
+            su.desiredLocation.x = (int) (x + ( su.displaySize*Math.cos(finalRotation + Math.PI/2) * xSpace ));//* (i-selectedUnits.size()/2) );
+            su.desiredLocation.y = (int) (y + ( su.displaySize*Math.sin(finalRotation + Math.PI/2) * xSpace ));//* (i-selectedUnits.size()/2) );
             su.setMoveAngle(su.desiredLocation);
             su.finalRotation = finalRotation;
         }

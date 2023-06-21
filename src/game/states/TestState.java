@@ -2,6 +2,7 @@ package game.states;
 
 import game.teams.Team;
 import game.units.*;
+import game.units.ammo.Projectile;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -13,7 +14,7 @@ public class TestState extends State {
     private Rectangle selectRect;
     private boolean dragging = false;
 
-    private Unit walkerUnit, tankUnit;
+    private Unit tankUnit;
 
     private ArrayList<Unit> units = new ArrayList<>();
 
@@ -29,6 +30,11 @@ public class TestState extends State {
         selectStart = new Point();
         selectEnd = new Point();
         selectRect = new Rectangle();
+
+
+        // Initialize the projectile bounds
+        Projectile.setBounds(0, width, 0, height);
+
 
         Team team1 = new Team(Color.blue, Color.cyan);
         Team team2 = new Team(Color.green, Color.darkGray);
@@ -64,6 +70,7 @@ public class TestState extends State {
     @Override
     public void update() {
         units.forEach(Unit::update);
+        Projectile.updateAll();
     }
 
     /**
@@ -74,6 +81,7 @@ public class TestState extends State {
     public void draw(Graphics g) {
         //((Graphics2D) g).setStroke(new BasicStroke(2));
 
+        Projectile.drawAll(g);
         units.forEach(unit -> unit.draw(g));
         drawSelection(g);
     }
@@ -92,15 +100,17 @@ public class TestState extends State {
                 Unit.selectedUnits.add(unit);
             } else {
                 unit.select(false);
-                //Unit.selectedUnits.remove(unit);
             }
         } );
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        //System.out.println("Clicked " + walkerUnit.isSelected());
-        Unit.orderMoveTo(e.getX(), e.getY());
+        if(e.getButton() == MouseEvent.BUTTON1) {
+            Unit.orderAttack(e.getX(), e.getY());
+        } else if (e.getButton() == MouseEvent.BUTTON3) {
+            Unit.orderMoveTo(e.getX(), e.getY());
+        }
     }
 
     @Override
@@ -113,7 +123,6 @@ public class TestState extends State {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        //System.out.println("Released " + walkerUnit.isSelected());
         if(dragging) {
             convertSelectedPoints();
             getSelection();
